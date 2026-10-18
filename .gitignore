@@ -1,0 +1,10 @@
+# Track only core source. Data, plots, logs, and caches stay out.
+*
+
+# Allow looking inside directories so nested source can be re-included
+!*/
+
+!.gitignore
+!*.py
+!*.R
+!*.md
