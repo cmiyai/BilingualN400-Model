@@ -139,8 +139,8 @@ if __name__ == '__main__':
                                                                   BU_TD_mode = "top_down", 
                                                                   cloze = val,
                                                                   sim_filename = f'cloze_simulations_preact_en{key}_2',
-                                                                  c1 = 0.01,
-                                                                  c2 = 0.01)})
+                                                                  c1 = 0.0095,
+                                                                  c2 = 0.0005)})
         # present each of the 512 standard inputs from the BOTTOM UP
         # 20 iterations
         cloze_simulations_bottomup_en.update({key: run_simulation(sim_input_bottomup = lex_c1, # full bilingual lexicon
@@ -150,8 +150,8 @@ if __name__ == '__main__':
                                                                BU_TD_mode = "bottom_up", 
                                                                prevSim = cloze_simulations_preactivate_en[key], 
                                                                sim_filename = f'cloze_simulations_bottomup_en{key}_2',
-                                                               c1 = 0.01,
-                                                                c2 = 0.01)})
+                                                               c1 = 0.0095,
+                                                                c2 = 0.0005)})
         
     # Entire Simulation: NonEnglish
     for key, val in cloze_levels.items():
@@ -162,8 +162,8 @@ if __name__ == '__main__':
                                                                   BU_TD_mode = "top_down", 
                                                                   cloze = val,
                                                                   sim_filename = f'cloze_simulations_preact_l2{key}_2',
-                                                                  c1 = 0.01,
-                                                                c2 = 0.01)})
+                                                                  c1 = 0.0095,
+                                                                c2 = 0.0005)})   
         # present each of the 512 standard inputs from the BOTTOM UP
         # 20 iterations
         cloze_simulations_bottomup_l2.update({key: run_simulation(sim_input_bottomup = lex_c2, # full bilingual lexicon
@@ -173,8 +173,8 @@ if __name__ == '__main__':
                                                                BU_TD_mode = "bottom_up", 
                                                                prevSim = cloze_simulations_preactivate_l2[key], 
                                                                sim_filename = f'cloze_simulations_bottomup_l2{key}_2',
-                                                               c1 = 0.01,
-                                                                c2 = 0.01)})
+                                                               c1 = 0.0095,
+                                                                c2 = 0.0005)})
     #pdb.set_trace()
     plotter = CustomPlot("Len50Lex")
     plotter1 = CustomPlot("Len50Lexp2")
@@ -184,6 +184,11 @@ if __name__ == '__main__':
     plotter.update_stretch(cloze_simulations_bottomup_l2[f'low_cloze'], color= 'r', linestyle = '--' , sim_label = f'low_cloze_l2')
     plotter.update_stretch(cloze_simulations_bottomup_en[f'high_cloze'], color= 'b', linestyle = '-' , sim_label = f'high_cloze_en')
     plotter.update_stretch(cloze_simulations_bottomup_l2[f'high_cloze'], color= 'g', linestyle = '--' , sim_label = f'high_cloze_l2')
+
+    plotter.update_lex_activation(cloze_simulations_bottomup_en[f'low_cloze'], color= 'k', linestyle = '-' , sim_label = f'low_cloze_en')
+    plotter.update_lex_activation(cloze_simulations_bottomup_l2[f'low_cloze'], color= 'r', linestyle = '--' , sim_label = f'low_cloze_l2')
+    plotter.update_lex_activation(cloze_simulations_bottomup_en[f'high_cloze'], color= 'b', linestyle = '-' , sim_label = f'high_cloze_en')
+    plotter.update_lex_activation(cloze_simulations_bottomup_l2[f'high_cloze'], color= 'g', linestyle = '--' , sim_label = f'high_cloze_l2')
 
     # plot difference
     plotter1.update_stretch_diff(cloze_simulations_bottomup_en[f'high_cloze'], cloze_simulations_bottomup_l2[f'high_cloze'], color='red', linestyle='-', sim_label='exp - unexp (highclz)' )
@@ -410,6 +415,23 @@ if __name__ == '__main__':
     #pdb.set_trace()
 
     max_yval_state,max_yval_error = get_max_yval(all_simulations)
+    top_state_means(
+    'behav_cloze_simulations_en',
+    cloze_simulations_bottomup_en,
+    max_yval_state,
+    ordered_conditions=['high_cloze', 'low_cloze'][::-1],
+    labels=['99% Cloze', '0.06% Cloze'][::-1],
+    condition_styles=['k-', 'k:'][::-1],
+    )
+
+    top_state_means(
+        'behav_cloze_simulations_l2',
+        cloze_simulations_bottomup_l2,
+        max_yval_state,
+        ordered_conditions=['high_cloze', 'low_cloze'][::-1],
+        labels=['99% Cloze', '0.06% Cloze'][::-1],
+        condition_styles=['k-', 'k:'][::-1],
+    )
 
     #pdb.set_trace()
     def total_error_means(filename, simulation, max_yval, ordered_conditions = [],condition_styles = ['r','k','b','g','r:','k:','b:','g:','r--','k--','b--','g--'],labels = [],legend_loc = 'upper right', plot_key = 'total_lexsem_err'):
@@ -522,6 +544,8 @@ if __name__ == '__main__':
     print("Running L2 total lexsem")
     total_error_means('cloze_simulations_l2', cloze_simulations_bottomup_l2, max_yval_error, ordered_conditions = ['high_cloze', 'low_cloze'][::-1], labels = ['99% Cloze', '0.06% Cloze'][::-1], condition_styles = ['k-', 'k:'][::-1], plot_key = 'total_lexsem_err')
     print("Finished Plotting L2 total lexsem")
+    top_state_means('behav_cloze_simulations_en', cloze_simulations_bottomup_en, max_yval_state, ordered_conditions = ['high_cloze', 'low_cloze'][::-1], labels = ['99% Cloze', '0.06% Cloze'][::-1], condition_styles = ['k-', 'k:'][::-1])
+    top_state_means('behav_cloze_simulations_l2', cloze_simulations_bottomup_l2, max_yval_state, ordered_conditions = ['high_cloze', 'low_cloze'][::-1], labels = ['99% Cloze', '0.06% Cloze'][::-1], condition_styles = ['k-', 'k:'][::-1])
     #pdb.set_trace()
     #simulation_accuracy_info(cloze_simulations_bottomup)
     total_error_means('lexical_violation', lexical_violation, max_yval_error, ordered_conditions = ['high_constraint_expected', 'high_constraint_unexpected', 'low_constraint_unexpected'][::-1], labels = ['99% Cloze', '99% Constraint Unexpected','0.06% Constraint Unexpected'][::-1], condition_styles = ['k-', 'r:', 'k:'][::-1],legend_loc = 'upper left')

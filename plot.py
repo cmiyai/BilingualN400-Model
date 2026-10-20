@@ -8,6 +8,7 @@ get_lb = lambda x : -x['simulation_data']['total_lex_bias'][0].mean(0)
 get_sb = lambda x : -x['simulation_data']['total_sem_bias'][0].mean(0)
 get_lse = lambda x: get_le(x) + get_se(x)
 get_lsb = lambda x: get_lb(x) + get_sb(x)
+get_maxlex = lambda x: x['simulation_data']['max_lex_state_activation'][0].mean(0)
 
 
 func_dic = {
@@ -34,6 +35,7 @@ def extract_diff(sim_a, sim_b, error_bias):
 
 class CustomPlot:
     def __init__(self, simulation_title):
+        self.simulation_title = simulation_title
         self.fig = plt.figure(figsize=(8, 6))
         gs = gridspec.GridSpec(2, 2)
         self.ax1 = self.fig.add_subplot(gs[0, 0])
@@ -81,6 +83,22 @@ class CustomPlot:
             self.ax3.legend(unique.values(), unique.keys())
 
             self.fig.canvas.draw_idle()
+
+    def update_lex_activation(self, simulation, color='blue', linestyle='-', sim_label=''):
+        a = self._pad_to_stretch(get_maxlex(simulation))
+        xs = np.arange(-20, 21)
+
+        if not hasattr(self, 'ax_lexact'):
+            self.fig_lexact, self.ax_lexact = plt.subplots(figsize=(8, 6))
+            self.ax_lexact.set_xlabel('Iterations')
+            self.ax_lexact.set_ylabel('Max lexical activation')
+            self.fig_lexact.suptitle(f'{self.simulation_title} lexical activation', fontsize=16)
+
+        self.ax_lexact.plot(xs, a, color=color, linestyle=linestyle, label=sim_label)
+        handles, labels = self.ax_lexact.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+        self.ax_lexact.legend(unique.values(), unique.keys())
+        self.fig_lexact.canvas.draw_idle()
     
     def update_stretch_diff(self, sim_a, sim_b, color='blue', linestyle='-', sim_label='', ylim=(-100, 150)): 
         """Plot (sim_a - sim_b) for each PE component."""

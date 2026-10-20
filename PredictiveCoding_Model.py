@@ -181,7 +181,7 @@ class Simulation:
         logger.info(np.array2string(lang_update, formatter={'float_kind': lambda x: f"{x:.4f}"})) 
 
 
-        lex_update_term = self.weights['O_to_L'] @ self.statespace['orth'][3] + self.I1 @ self.statespace['lex'][2] + lang_const # update <- W1*PE_orth + I1*tdB_lex + lang_const
+        lex_update_term = self.weights['O_to_L'] @ self.statespace['orth'][3] + self.I1 @ self.statespace['lex'][2]# update <- W1*PE_orth + I1*tdB_lex + lang_const
         
         self.statespace['lex'][0] = eps_mul(self.statespace['lex'][0], lex_update_term) # ST_lex <- max(eps2, ST_lex) .* update
         self.statespace['lex'][3] = eps_div(self.statespace['lex'][0], self.statespace['lex'][1]) # PE_lex <- ST_lex ./ max(tdR_lex, eps1)
@@ -206,7 +206,10 @@ class Simulation:
             # self.statespace['ctx'][0][topdown_input_inds,np.arange(self.num_trials)]  = np.max(self.topdown_input) #(1568?, 512)
         # compute all reconstructions
         for lvl in range(3):
-            self.statespace[levels[lvl]][1] = self.weights[get_wt(lvl+1, lvl)] @ self.statespace[levels[lvl+1]][0] # tdR_lowerlevel = V_higher_to_lower * ST_higherlevel      
+            if lvl == 1:
+                self.statespace['lex'][1] = (self.weights['S_to_L'] @ self.statespace['sem'][0]) + lang_const
+            else:
+                self.statespace[levels[lvl]][1] = self.weights[get_wt(lvl+1, lvl)] @ self.statespace[levels[lvl+1]][0] # tdR_lowerlevel = V_higher_to_lower * ST_higherlevel      
         
         self.current_iteration += 1
         self.iterations_this_run += 1
