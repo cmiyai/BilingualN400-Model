@@ -61,7 +61,8 @@ class CustomPlot:
             self.ax3.legend(unique.values(), unique.keys())
 
             self.fig.canvas.draw_idle()
-    def update_stretch(self, simulation, color='blue', linestyle='-', sim_label = ''):
+    def update_stretch(self, simulation, trial=None, lexicon=None, color='blue', linestyle='-', sim_label = ''):
+        # one condition: predicted {x} w/ {cloze_value} bottomup = {z}
         for error_bias in ['error']:
             a, b, c = extract_values(simulation, error_bias)
             padding_size = 41 - a.shape[0]
@@ -84,14 +85,20 @@ class CustomPlot:
 
             self.fig.canvas.draw_idle()
 
-    def update_lex_activation(self, simulation, color='blue', linestyle='-', sim_label=''):
-        a = self._pad_to_stretch(get_maxlex(simulation))
+    def update_lex_activation(self, simulation, word_idx, trial, color='blue', linestyle='-', sim_label=''):
+        """
+
+        """
+        lex = simulation['simulation_data']['lex_state']  # (words, trials, 40 iterations)
+        # 
+        #trials = np.arange(lex.shape[1])
+        a = self._pad_to_stretch(lex[word_idx, trial, :])
         xs = np.arange(-20, 21)
 
         if not hasattr(self, 'ax_lexact'):
             self.fig_lexact, self.ax_lexact = plt.subplots(figsize=(8, 6))
             self.ax_lexact.set_xlabel('Iterations')
-            self.ax_lexact.set_ylabel('Max lexical activation')
+            self.ax_lexact.set_ylabel('Lexical activation')
             self.fig_lexact.suptitle(f'{self.simulation_title} lexical activation', fontsize=16)
 
         self.ax_lexact.plot(xs, a, color=color, linestyle=linestyle, label=sim_label)
@@ -99,6 +106,69 @@ class CustomPlot:
         unique = dict(zip(labels, handles))
         self.ax_lexact.legend(unique.values(), unique.keys())
         self.fig_lexact.canvas.draw_idle()
+
+    def update_l1_l2_activation(self, simulation, en_idx, l2_idx, color='blue', sim_label=''):
+        lex = simulation['simulation_data']['lex_state']  # (words, trials, iterations)
+        trials = np.arange(lex.shape[1])
+        l1 = self._pad_to_stretch(lex[np.asarray(en_idx), trials, :].mean(0))
+        l2 = self._pad_to_stretch(lex[np.asarray(l2_idx), trials, :].mean(0))
+        xs = np.arange(-20, 21)
+
+        if not hasattr(self, 'ax_l1l2'):
+            self.fig_l1l2, self.ax_l1l2 = plt.subplots(figsize=(8, 6))
+            self.ax_l1l2.set_xlabel('Iterations')
+            self.ax_l1l2.set_ylabel('Lexical activation')
+            self.fig_l1l2.suptitle(f'{self.simulation_title} L1 vs L2', fontsize=16)
+
+        self.ax_l1l2.plot(xs, l1, color=color, linestyle='-', label=f'{sim_label} L1')
+        self.ax_l1l2.plot(xs, l2, color=color, linestyle='--', label=f'{sim_label} L2')
+        handles, labels = self.ax_l1l2.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+        self.ax_l1l2.legend(unique.values(), unique.keys())
+        self.fig_l1l2.canvas.draw_idle()
+
+    def update_lang_lex_activation(self, simulation, trial, lexicon, color='blue',sim_label=''):
+        # one condition: predicted {x} w/ {cloze_value} bottomup = {z}, plotting_activation {w}
+        #
+        orth_input = simulation['sim_input_bottomup'][trial]
+        topdown = simulation['sim_input_topdown']
+        pred_concept = topdown[trial] if len(topdown) else lexicon.words[trial]
+        cloze_val, c1_val, c2_val = simulation['cloze'], simulation['c1'], simulation['c2']
+        #pdb.set_trace()
+        # trial gives orth input
+        # find language
+        # update l1 and l2
+        print(c1_val)
+        print(c2_val)
+
+        #  TODO: mapping of warods
+        plot_act_l1_idx = trial
+        plot_act_l1_word = lexicon.words[plot_act_l1_idx] # map words here
+        plot_act_l2_idx = trial + 1568
+        plot_act_l2_word = lexicon.words[plot_act_l2_idx] # map words here
+        
+        lex = simulation['simulation_data']['lex_state']  # (words, trials, iterations)
+        trials = np.arange(lex.shape[1])
+        l1 = self._pad_to_stretch(lex[plot_act_l1_idx, trial, :])
+        l2 = self._pad_to_stretch(lex[plot_act_l2_idx, trial, :])
+        xs = np.arange(-20, 21)
+
+        if not hasattr(self, 'ax_l1l2'):
+            self.fig_l1l2, self.ax_l1l2 = plt.subplots(figsize=(8, 6))
+            self.ax_l1l2.set_xlabel('Iterations')
+            self.ax_l1l2.set_ylabel('Lexical activation')
+            self.fig_l1l2.suptitle(f'{self.simulation_title} L1 vs L2', fontsize=16)
+        
+        sim_label_l1 = f"Predicted {pred_concept} w/ {cloze_val:.4f} bottomup = {orth_input}, plotting_activation: {plot_act_l1_word}"
+        sim_label_l2 = f"Predicted {pred_concept} w/ {cloze_val:.4f} bottomup = {orth_input}, plotting_activation: {plot_act_l2_word}"
+
+
+        self.ax_l1l2.plot(xs, l1, color=color, linestyle='-', label=f'{sim_label_l1}')
+        self.ax_l1l2.plot(xs, l2, color=color, linestyle='--', label=f'{sim_label_l2}')
+        handles, labels = self.ax_l1l2.get_legend_handles_labels()
+        unique = dict(zip(labels, handles))
+        self.ax_l1l2.legend(unique.values(), unique.keys())
+        self.fig_l1l2.canvas.draw_idle()
     
     def update_stretch_diff(self, sim_a, sim_b, color='blue', linestyle='-', sim_label='', ylim=(-100, 150)): 
         """Plot (sim_a - sim_b) for each PE component."""

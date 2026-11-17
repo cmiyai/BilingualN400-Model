@@ -19,12 +19,17 @@ np.random.seed(1)
 def run_simulation(**kwargs):
     # run a simulation and keep only the components needed for plotting and data analysis (to avoid out-of-memory errors)
     full_simulation = Simulation(**kwargs)
-    data,fname,sim_input_bottomup,sim_input_topdown = full_simulation.simulation_data, full_simulation.sim_filename, full_simulation.sim_input_bottomup, full_simulation.sim_input_topdown
+    data,fname,sim_input_bottomup,sim_input_topdown, = full_simulation.simulation_data, full_simulation.sim_filename, full_simulation.sim_input_bottomup, full_simulation.sim_input_topdown
+    cloze, c1, c2 = full_simulation.cloze, full_simulation.c1, full_simulation.c2
     del full_simulation
     return {"simulation_data" : data,
              "sim_filename" : fname,
              "sim_input_bottomup": sim_input_bottomup,
-             "sim_input_topdown": sim_input_topdown}
+             "sim_input_topdown": sim_input_topdown,
+             "cloze": cloze,
+             "c1": c1,
+             "c2": c2,
+             }
     # return full_simulation
 def run_simulation_comp(**kwargs):
     # run a simulation and keep only the components needed for plotting and data analysis (to avoid out-of-memory errors)
@@ -34,7 +39,8 @@ def run_simulation_comp(**kwargs):
     return {"simulation_data" : data,
              "sim_filename" : fname,
              "sim_input_bottomup": sim_input_bottomup,
-             "sim_input_topdown": sim_input_topdown}
+             "sim_input_topdown": sim_input_topdown,
+             }
     # return full_simulation
 
 
@@ -48,12 +54,14 @@ wordlist = np.array(lexicon.words)
 ##################### DEFINE STIMULI FOR ALL CONDITIONS ##################### 
 
 ## create stimuli that are counterbalanced
-# quads = find_counterbalanced_quads(lexicon,min_sem_overlap = 1)
-# stim_dict = create_stimulus_lists(quads, lexicon)
+#quads = find_counterbalanced_quads(lexicon,min_sem_overlap = 1)
+#stim_dict = create_stimulus_lists(quads, lexicon)
+#pdb.set_trace()
 # verify_stimulus_lists(stim_dict, lexicon)
 # np.save('./helper_txt_files/standard_stims_word_idx.npy', stim_dict['standard_idx'])
 # np.save('./helper_txt_files/sem_related_word_idx_nonneighbor.npy', stim_dict['sem_related_idx'])
-# np.save('./helper_txt_files/fully_unrelated_word_idx_1.npy', stim_dict['unrelated_idx'])
+#np.save('./helper_txt_files/fully_unrelated_word_idx_1.npy', stim_dict['unrelated_idx'])
+
 
 standard_stims_word_idx = np.load('./helper_txt_files/standard_stims_word_idx.npy')
 bilingual_stims_30_idx = np.load('./helper_txt_files/bilingual_13_word_idx.npy') # note 50
@@ -144,7 +152,7 @@ if __name__ == '__main__':
         # present each of the 512 standard inputs from the BOTTOM UP
         # 20 iterations
         cloze_simulations_bottomup_en.update({key: run_simulation(sim_input_bottomup = lex_c1, # full bilingual lexicon
-                                                               #sim_input_topdown = lex_c1, # double english concept
+                                                               sim_input_topdown = lex_c1, # double english concept
                                                                cloze = val,
                                                                clamp_iterations =NUM_ITERS,
                                                                BU_TD_mode = "bottom_up", 
@@ -167,7 +175,7 @@ if __name__ == '__main__':
         # present each of the 512 standard inputs from the BOTTOM UP
         # 20 iterations
         cloze_simulations_bottomup_l2.update({key: run_simulation(sim_input_bottomup = lex_c2, # full bilingual lexicon
-                                                               #sim_input_topdown = lex_c1, # double english concept
+                                                               sim_input_topdown = lex_c1, # double english concept
                                                                cloze = val,
                                                                clamp_iterations =NUM_ITERS,
                                                                BU_TD_mode = "bottom_up", 
@@ -175,24 +183,69 @@ if __name__ == '__main__':
                                                                sim_filename = f'cloze_simulations_bottomup_l2{key}_2',
                                                                c1 = 0.0095,
                                                                 c2 = 0.0005)})
-    #pdb.set_trace()
     plotter = CustomPlot("Len50Lex")
-    plotter1 = CustomPlot("Len50Lexp2")
-
+    #plotter1 = CustomPlot("Len50Lexp2")
+    #pdb.set_trace()
 
     plotter.update_stretch(cloze_simulations_bottomup_en[f'low_cloze'], color= 'k', linestyle = '-' , sim_label = f'low_cloze_en')
+    #pdb.set_trace()
     plotter.update_stretch(cloze_simulations_bottomup_l2[f'low_cloze'], color= 'r', linestyle = '--' , sim_label = f'low_cloze_l2')
     plotter.update_stretch(cloze_simulations_bottomup_en[f'high_cloze'], color= 'b', linestyle = '-' , sim_label = f'high_cloze_en')
     plotter.update_stretch(cloze_simulations_bottomup_l2[f'high_cloze'], color= 'g', linestyle = '--' , sim_label = f'high_cloze_l2')
 
-    plotter.update_lex_activation(cloze_simulations_bottomup_en[f'low_cloze'], color= 'k', linestyle = '-' , sim_label = f'low_cloze_en')
-    plotter.update_lex_activation(cloze_simulations_bottomup_l2[f'low_cloze'], color= 'r', linestyle = '--' , sim_label = f'low_cloze_l2')
-    plotter.update_lex_activation(cloze_simulations_bottomup_en[f'high_cloze'], color= 'b', linestyle = '-' , sim_label = f'high_cloze_en')
-    plotter.update_lex_activation(cloze_simulations_bottomup_l2[f'high_cloze'], color= 'g', linestyle = '--' , sim_label = f'high_cloze_l2')
+    #pdb.set_trace()
 
+    # scalar
+    en_idx = 0
+    l2_idx = 1568 + en_idx
+
+    word = lexicon.words[en_idx] # change our word for the lexical activation plot
+    trial = int(np.where(lex_c1 == word)[0][0])
+    
+    # trial2 = int(np.where(lex_c2 == shifted_word)[0][0])
+    # trial 2 represents the actual representerd word
+
+    '''
+    plotter.update_lex_activation(cloze_simulations_bottomup_en['low_cloze'], trial, trial, color='k', linestyle='-', sim_label=f'low_cloze_en {word}')
+    plotter.update_lex_activation(cloze_simulations_bottomup_l2['low_cloze'], trial, trial, color='r', linestyle='--', sim_label=f'low_cloze_l2 {word}')
+    plotter.update_lex_activation(cloze_simulations_bottomup_en['high_cloze'], trial, trial, color='b', linestyle='-', sim_label=f'high_cloze_en {word}')
+    plotter.update_lex_activation(cloze_simulations_bottomup_l2['high_cloze'], trial, trial, color='g', linestyle='--', sim_label=f'high_cloze_l2 {word}')
+
+    plotter.update_l1_l2_activation(cloze_simulations_bottomup_en['low_cloze'], en_idx, l2_idx, color='k', sim_label='low_cloze_en')
+    plotter.update_l1_l2_activation(cloze_simulations_bottomup_l2['low_cloze'], en_idx, l2_idx, color='r', sim_label='low_cloze_l2')
+    plotter.update_l1_l2_activation(cloze_simulations_bottomup_en['high_cloze'], en_idx, l2_idx, color='b', sim_label='high_cloze_en')
+    plotter.update_l1_l2_activation(cloze_simulations_bottomup_l2['high_cloze'], en_idx, l2_idx, color='g', sim_label='high_cloze_l2')
     # plot difference
     plotter1.update_stretch_diff(cloze_simulations_bottomup_en[f'high_cloze'], cloze_simulations_bottomup_l2[f'high_cloze'], color='red', linestyle='-', sim_label='exp - unexp (highclz)' )
     plotter1.update_stretch_diff(cloze_simulations_bottomup_en[f'low_cloze'], cloze_simulations_bottomup_l2[f'low_cloze'], color='blue', linestyle='-', sim_label='exp - unexp (lowclz)' )
+    '''
+    # bottom up simulation en
+    plotter.update_lang_lex_activation(
+        cloze_simulations_bottomup_en['high_cloze'],
+        trial,
+        lexicon,
+        color='red',
+    )
+    plotter.update_lang_lex_activation(
+        cloze_simulations_bottomup_en['low_cloze'],
+        trial,
+        lexicon,
+        color='blue',
+    )
+
+    # bottom up simulation en
+    plotter.update_lang_lex_activation(
+        cloze_simulations_bottomup_l2['high_cloze'],
+        trial,
+        lexicon,
+        color='green',
+    )
+    plotter.update_lang_lex_activation(
+        cloze_simulations_bottomup_l2['low_cloze'],
+        trial,
+        lexicon,
+        color='orange',
+    )
 
     #plotter.update_stretch(sim[f'{title}_lowclz'], color= 'k', linestyle = ':' , sim_label = f'{title}_lowclz')
     plt.show()
